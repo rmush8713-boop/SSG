@@ -26,10 +26,9 @@ def markdown_to_html_node(markdown):
     return ParentNode('div', result)
 
 def code_wrap(block):
-    c = block.split('\n')
-    c = c[1:-1]
-    c = "\n".join(c)
-    return ParentNode('pre', [LeafNode("code", c)])
+    c = block[4:-3]
+    cn = text_node_to_html_node(TextNode(c, TextType.TEXT))
+    return ParentNode('pre', [ParentNode('code', [cn])])
 
 def pg_wrap(block):
     result = []
@@ -49,21 +48,29 @@ def header_wrap(block):
 
 def quote_wrap(block):
     result = []
-    nodes = text_to_textnodes(re.sub(r"^>\s+", '', block, flags=re.MULTILINE))
-    for node in nodes:
-        result.append(text_node_to_html_node(node))
-    return ParentNode('blockquote', result)
+    splitted = re.sub(r"^>+", '', block, flags=re.MULTILINE).split('\n')
+    for s in splitted:
+        result.append(s.strip())
+    return ParentNode('blockquote', c_text(" ".join(result)))
 
 def unord_wrap(block):
     splited = (re.sub(r"^-\s+", '', block, flags=re.MULTILINE)).split('\n')
     r = []
     for s in splited:
-        r.append(LeafNode("li", s))
+        r.append(ParentNode("li", c_text(s)))
     return ParentNode('ul', r)
 
 def ord_wrap(block):
-    splited = (re.sub(r"^\d.\s+", '', block, flags=re.MULTILINE)).split('\n')
+    splited = (re.sub(r"^\d\.\s+", '', block, flags=re.MULTILINE)).split('\n')
     r = []
     for s in splited:
-        r.append(LeafNode("li", s))
+        r.append(ParentNode("li", c_text(s)))
     return ParentNode('ol', r)
+
+
+def c_text(text):
+    t = text_to_textnodes(text)
+    r = []
+    for i in t:
+        r.append(text_node_to_html_node(i))
+    return r
